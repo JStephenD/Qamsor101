@@ -1,4 +1,3 @@
-
 import json, requests, os, time
 from flask import Flask, request
 from requests_toolbelt import MultipartEncoder
@@ -42,7 +41,8 @@ def pertget():
 @app.route('/pert', methods=['POST'])
 def pertpost():
     global mp, md
-
+    mp = MobilePert(pertpath)
+    md = MobileDodgem(pertpath)
     def forfeit(message):
         buttons = [
             {
@@ -104,7 +104,7 @@ def pertpost():
                     sendmessage_button(id, message, buttons, PERT_TOKEN)
 
                 elif message == 'start-pert':
-                    mp = MobilePert(qamsorpath)
+                    # mp = MobilePert(pertpath)
                     mp.reset(id)
                     mp.changeState(id, 'pert-reset')
                     message = 'Welcome to QAMSOR 101 PERT tool.\n\n'
@@ -123,7 +123,7 @@ def pertpost():
                     ]
                     sendmessage_button(id, 'Choose Next Action', buttons, PERT_TOKEN)
                 elif message == 'start-dodgem':
-                    md = MobileDodgem(qamsorpath)
+                    # md = MobileDodgem(pertpath)
                     md.start(id)
                     md.change_state(id, 'dodgem-new')
                     button_message = 'Welcome to QAMSOR 101 DODGEM Game\n\n'
@@ -174,6 +174,7 @@ def pertpost():
                     ]
                     sendmessage_button(id, response, buttons, PERT_TOKEN)
                 elif message == 'pert-reset':
+                    mp = MobilePert(pertpath)
                     mp.reset(id)
                     mp.changeState(id, 'pert-reset')
                     send_message(id, 'Your Pert Table has been reset', PERT_TOKEN)
@@ -182,7 +183,7 @@ def pertpost():
                         {
                             'type': 'postback',
                             'title': 'ADD ACTIVITY',
-                            'payload': 'acivity-add'
+                            'payload': 'activity-add'
                         },
                         {
                             'type': 'postback',
@@ -303,7 +304,7 @@ def pertpost():
                     message += 'Choose the token you want to move.'
                     tokens = md.get_movable_tokens(id)
                     if len(tokens) == 0:
-                        fmsg = f'{ai} AI\n{md.show_board}' + '\n\nNo movable tokens remaining.'
+                        fmsg = f'{ai} AI\n{md.show_board()}' + '\n\nNo movable tokens remaining.'
                         forfeit(fmsg)
                     else:
                         send_movable_tokens(message, tokens)
@@ -335,8 +336,8 @@ def pertpost():
                             mp.changeState(id, 'added-activity')
                         except ParseError as e:
                             send_message(id, str(e), PERT_TOKEN)
-                    
-    return "okpert"               
+                        mp.updatejson()
+    return "okpert"                      
 
 def send_pert_file(id, token):
     dirpath = os.path.dirname(os.path.abspath(__file__))

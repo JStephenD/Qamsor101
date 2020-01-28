@@ -83,9 +83,7 @@ class MobileDodgem:
         self.board_value = self.updatejson(self.board_value)
         self.ai_move = self.updatejson(self.ai_move)
         self.check_winner= self.updatejson(self.check_winner)
-        self.show_board = self.updatejson(self.show_board)
-
-        self.updatejson()
+        self.show_board = self.updatejson(self.show_board)        
 
     def start(self, id):
         id = str(id)
@@ -100,9 +98,9 @@ class MobileDodgem:
             ]
 
             # self.data[id]['dodgem'] = [
-            #     [' ', 'R2', 'R1'],
+            #     [' ', 'R2', ' '],
             #     [' ', 'B2', 'B1'],
-            #     [' ', ' ', ' ']
+            #     [' ', ' ', 'R1']
             # ]
             
         if not self.data.get(id):
@@ -316,7 +314,7 @@ class MobileDodgem:
                 if tries == 0:
                     raise MaximumMoveFindTries
             chosen_move = random.choice(moves)            
-            winner = self.move_token(id, token, chosen_move)
+            self.move_token(id, token, chosen_move)
 
         def medium():
             nonlocal self, id, board
@@ -345,7 +343,7 @@ class MobileDodgem:
 
                 self.move_token(id, token, move, board)
                 score = self.board_value(id, board)
-                if not isMaximizing and self.check_winner(id, board):
+                if self.check_winner(id, board) == self.mini:
                     return score + (-50 * (maxdepth - (maxdepth - depth)))
 
                 if depth == 0:
@@ -353,10 +351,12 @@ class MobileDodgem:
                 else:
                     token_move_score = []
                     other_choice = []
-                    if tokens := self.get_movable_tokens(id, isMaximizing, board):
+                    if tokens := self.get_movable_tokens(id, not isMaximizing, board):
                         for token in tokens:
-                            best_move = best_move_of_token(token, isMaximizing, board)
-                            if on_win_tile(token, isMaximizing, board):
+                            newboard = copy.deepcopy(board)
+                            best_move = best_move_of_token(token, not isMaximizing, newboard)
+                            self.move_token(id, best_move[0], best_move[1], newboard)
+                            if on_win_tile(token, not isMaximizing, newboard):
                                 other_choice.append(best_move)
                             else:
                                 token_move_score.append(best_move)
@@ -366,7 +366,7 @@ class MobileDodgem:
                             return score
                             # raise AiLost('No moves left')
                         token_move_score = other_choice 
-                    token_move_score.sort(key=itemgetter(2), reverse=isMaximizing)
+                    token_move_score.sort(key=itemgetter(2), reverse=not isMaximizing)
                     token_move = token_move_score[0]
                     token, move = token_move[0], token_move[1]
                     return (score + minimax(token, move, not isMaximizing, board, depth-1) + (-50 if isMaximizing else 50))
@@ -387,7 +387,7 @@ class MobileDodgem:
                     token_move.append(minimax(token, move, False, board))
                 token_move_score.sort(key=itemgetter(2))
                 best_move = token_move_score[0]
-                self.move_token(id, best_move[0], best_move[1])
+                self.move_token(id, best_move[0], best_move[1], board)
 
         modes = {'easy': easy, 'medium': medium, 'hard': hard}
         modes[mode]()

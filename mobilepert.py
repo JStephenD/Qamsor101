@@ -35,9 +35,7 @@ class MobilePert:
         self.add = self.updatejson(self.add)
         self.solve = self.updatejson(self.solve)
         self.changeState = self.updatejson(self.changeState)
-        self.state = self.updatejson(self.state)
-
-        self.updatejson()
+        self.state = self.updatejson(self.state)        
 
     def reset(self, id):
         id = str(id)
